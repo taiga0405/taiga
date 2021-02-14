@@ -1,7 +1,17 @@
 <div>Teachable Machine Pose Model</div>
 <button type="button" onclick="init()">Start</button>
 <div><canvas id="canvas"></canvas></div>
+<canvas id="mycanvas" width="500" height="500"></canvas>
 <div id="label-container"></div>
+
+<!-- for mycanvas -->
+<p id="pointsinfox"></p>
+<p id="pointsinfoy"></p>
+<p id="prob1"></p>
+<p id="prob2"></p>
+<p id="prob3"></p>
+<canvas id="mycanvas"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
 <script type="text/javascript">
@@ -11,6 +21,11 @@
     // the link to your model provided by Teachable Machine export panel
     const URL = "https://teachablemachine.withgoogle.com/models/WMJpiYdSS/";
     let model, webcam, ctx, labelContainer, maxPredictions;
+
+    // for mycanvas
+    let mycanvas = document.getElementById('mycanvas');
+    let myctx = mycanvas.getContext('2d');
+    let prob0;
 
     async function init() {
         const modelURL = URL + "model.json";
@@ -23,7 +38,7 @@
         maxPredictions = model.getTotalClasses();
 
         // Convenience function to setup a webcam
-        const size = 200;
+        const size = 300;
         const flip = true; // whether to flip the webcam
         webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
         await webcam.setup(); // request access to the webcam
@@ -59,6 +74,11 @@
             labelContainer.childNodes[i].innerHTML = classPrediction;
         }
 
+        // prob0
+        prob1 = prediction[0].probability;
+        prob2 = prediction[1].probability;
+        prob3 = prediction[2].probability;
+
         // finally draw the poses
         drawPose(pose);
     }
@@ -71,7 +91,125 @@
                 const minPartConfidence = 0.5;
                 tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
                 tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+
+                // for mycanvas
+                let p = pose.keypoints;
+                //console.log(p);
+                document.getElementById('pointsinfox').textContent = p[0].position.x;
+                document.getElementById('pointsinfoy').textContent = p[0].position.y;
+                document.getElementById('prob1').textContent       = prob1;
+                document.getElementById('prob2').textContent       = prob2;
+                document.getElementById('prob3').textContent       = prob3;
+
+                myctx.fillStyle = 'gray';
+                
+                myctx.fillRect(0, 0, 500, 500);
+                myctx.fillStyle = 'red';
+               
+               //目
+                myctx.beginPath();
+                myctx.fillStyle = 'blue';
+                
+                
+  
+                //輪郭
+                myctx.lineWidth = 1;
+                myctx.fillStyle = 'red';
+                let r= Math.sqrt((p[0].position.x-p[3].position.x)**2+(p[0].position.y-p[3].position.y)**2)
+ 
+                myctx.arc(p[0].position.x, p[0].position.y,r,0, 2 * Math.PI); 
+                
+                myctx.fill();
+                //目
+
+                myctx.beginPath();
+                myctx.fillStyle = 'black';
+                myctx.arc(p[1].position.x, p[1].position.y,r*0.1,0, 2 * Math.PI);
+                myctx.fill();
+                myctx.beginPath();
+            　　myctx.arc(p[2].position.x, p[2].position.y,r*0.1,0, 2 * Math.PI);  
+                myctx.fill(); 
+                
+               //鼻
+               
+                
+                //首
+              
+                myctx.fillStyle = 'red';
+                myctx.fillRect(p[0].position.x-10, p[0].position.y,20,200);
+                myctx.fillStyle = 'black';
+                myctx.fillRect(p[0].position.x, p[0].position.y, 0.2*r, 0.2*r);
+               //胴体
+                myctx.fillStyle = 'red';
+                myctx.fillRect(p[6].position.x, p[6].position.y, 10, 10);
+
+                let r1= Math.sqrt((p[5].position.x-p[6].position.x)**2+(p[5].position.y-p[6].position.y)**2)
+                myctx.fillRect(p[6].position.x, p[6].position.y, r1, 200);
+
+                //腕を結ぶ線
+                if(prob2>0.8){
+                    myctx.strokeStyle='green';
+                    
+               myctx.beginPath();
+               myctx.lineWidth = 20; 
+               myctx.moveTo(p[7].position.x, p[7].position.y);
+               myctx.lineTo(p[9].position.x, p[9].position.y);
+               myctx.moveTo(p[5].position.x, p[5].position.y);
+               myctx.lineTo(p[7].position.x, p[7].position.y);
+               myctx.moveTo(p[8].position.x, p[8].position.y);
+               myctx.lineTo(p[10].position.x, p[10].position.y);
+               myctx.moveTo(p[6].position.x, p[6].position.y);
+               myctx.lineTo(p[8].position.x, p[8].position.y);
+               myctx.closePath();
+               myctx.stroke();
+                } else if(prob3>0.8) {
+                
+               myctx.strokeStyle='black';
+               myctx.beginPath();
+               myctx.lineWidth = 20; 
+               myctx.moveTo(p[7].position.x, p[7].position.y);
+               myctx.lineTo(p[9].position.x, p[9].position.y);
+               myctx.moveTo(p[5].position.x, p[5].position.y);
+               myctx.lineTo(p[7].position.x, p[7].position.y);
+               myctx.moveTo(p[8].position.x, p[8].position.y);
+               myctx.lineTo(p[10].position.x, p[10].position.y);
+               myctx.moveTo(p[6].position.x, p[6].position.y);
+               myctx.lineTo(p[8].position.x, p[8].position.y);
+               myctx.closePath();
+               myctx.stroke();
+                }else{
+                
+                    myctx.strokeStyle='red';
+                    
+               myctx.beginPath();
+               myctx.lineWidth = 20; 
+               myctx.moveTo(p[7].position.x, p[7].position.y);
+               myctx.lineTo(p[9].position.x, p[9].position.y);
+               myctx.moveTo(p[5].position.x, p[5].position.y);
+               myctx.lineTo(p[7].position.x, p[7].position.y);
+               myctx.moveTo(p[8].position.x, p[8].position.y);
+               myctx.lineTo(p[10].position.x, p[10].position.y);
+               myctx.moveTo(p[6].position.x, p[6].position.y);
+               myctx.lineTo(p[8].position.x, p[8].position.y);
+               myctx.closePath();
+               myctx.stroke();
+                }
+ 
+
+
+                
+                
+
+
+
+
+
+    
             }
         }
     }
 </script>
+
+
+
+
